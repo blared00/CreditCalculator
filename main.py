@@ -1,3 +1,8 @@
+from loguru import logger
+
+from decorator import timeit
+
+
 class CreditCalculator:
     """Калькулятор для расчета выплат по кредиту
 
@@ -25,7 +30,9 @@ class CreditCalculator:
         Возвращает месячную выплату по кредиту
 
     """
+    logger.add('logfile.txt', format="{time} {level} {message}")
 
+    @timeit
     def __init__(self, request_str: str):
         dict_param = dict(param for param in map(lambda x: x.split(': '), request_str.lower().split('\n')) if param[0])
         dict_param['interest'] = dict_param['interest'].replace('%', '')
@@ -38,6 +45,7 @@ class CreditCalculator:
         if self.amount < self.downpayment:
             raise ValueError('Значение первоначального взноса превышает сумму кредитования')
 
+    @logger.catch()
     def get_float_parameter(self, dict_param: dict, request_parameter: str) -> float:
         """Возвращает выделеный параметр из словаря и переводит его в число с плавающей точкой.
         Parameters
