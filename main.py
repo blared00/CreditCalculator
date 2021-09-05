@@ -1,3 +1,6 @@
+import Levenshtein
+
+
 class CreditCalculator:
     """Калькулятор для расчета выплат по кредиту
 
@@ -25,16 +28,38 @@ class CreditCalculator:
         Возвращает месячную выплату по кредиту
 
     """
+    PARAMETERS = ['amount', 'interest', 'downpayment', 'term']
+    MAX_AMOUNT = 1000000000
+    MAX_TERM = 30
 
     def __init__(self, request_str: str):
-        dict_param = dict(param for param in map(lambda x: x.split(': '), request_str.lower().split('\n')) if param[0])
+        self.amount, self.interest, self.downpayment, self.term = self.get_parameters(request_str)
+        self.valid_param()
+
+    def get_parameters(self, request_str: str) -> tuple:
+        """Получение параметров"""
+        list_request = (param for param in map(lambda x: x.split(': '), request_str.lower().split('\n'))
+                        if param[0])
+        dict_param = {}
+        for key, value in list_request:
+            for param in self.PARAMETERS:
+                percent_coincidence = 1 - Levenshtein.distance(key, param) / max(len(key), len(param))
+                if percent_coincidence >= 0.75:
+                    if param not in dict_param:
+                        dict_param[param] = value
+                    else:
+                        raise ValueError(f"Параметр {param} задан дважды")
         dict_param['interest'] = dict_param['interest'].replace('%', '')
-        self.amount = self.get_float_parameter(dict_param, 'amount')
-        self.interest = self.get_float_parameter(dict_param, 'interest') * 0.01
-        self.downpayment = self.get_float_parameter(dict_param, 'downpayment')
-        self.term = self.get_float_parameter(dict_param, 'term')
+        return tuple(self.get_float_parameter(dict_param, param) for param in self.PARAMETERS)
+
+    def valid_param(self):
+        """Валидация параметров класса"""
+        if self.amount > self.MAX_AMOUNT:
+            raise ValueError('Превышено максимальное значение суммы кредита')
         if self.term == 0:
             raise ZeroDivisionError('Значение срока выплаты не может быть равно 0')
+        elif self.term > self.MAX_TERM:
+            raise ValueError('Слишком большой срок выплаты кредита')
         if self.amount < self.downpayment:
             raise ValueError('Значение первоначального взноса превышает сумму кредитования')
 
@@ -56,7 +81,7 @@ class CreditCalculator:
 
     def get_percent_payment(self) -> float:
         """Возвращает общий объём начисленных процентов."""
-        return (self.amount - self.downpayment) * self.interest * self.term
+        return (self.amount - self.downpayment) * self.interest * 0.01 * self.term
 
     def get_total_payment(self) -> float:
         """Возвращает общую сумму выплаты."""
