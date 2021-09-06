@@ -1,11 +1,19 @@
 import unittest
 
+from loguru import logger
+
 from .main import CreditCalculator
+
+logger.add(
+    "testlog.txt",
+)
 
 
 class TestCreditCalculator(unittest.TestCase):
     def setUp(self) -> None:
-        self.credit_cal = CreditCalculator("""amount: 100000\ninterest: 5.5%\ndownpayment: 20000\nterm: 30\n""")
+        self.credit_cal = CreditCalculator(
+            """amount: 100000\ninterest: 5.5%\ndownpayment: 20000\nterm: 30\n"""
+        )
 
     def test_create_calculator(self):
         self.assertEqual(self.credit_cal.amount, 100000.0)
@@ -19,19 +27,25 @@ class TestCreditCalculator(unittest.TestCase):
         self.assertEqual(self.credit_cal.get_total_payment(), 212000.0)
 
     def test_double_param_request(self):
-        bad_request = "amount: 10000\ninterest: 5.5%\ndownpayment: 2000\nterm: 30\nterm: 20"
+        bad_request = (
+            "amount: 10000\ninterest: 5.5%\ndownpayment: 2000\nterm: 30\nterm: 20"
+        )
         raise_answer = "Параметр term задан дважды"
         self.assertRaisesRegex(ValueError, raise_answer, CreditCalculator, bad_request)
 
     def test_biggest_amount(self):
-        bad_request = "amount: 10000000000\ninterest: 5.5%\ndownpayment: 2000\nterm: 30\n"
+        bad_request = (
+            "amount: 10000000000\ninterest: 5.5%\ndownpayment: 2000\nterm: 30\n"
+        )
         raise_answer = "Превышено максимальное значение суммы кредита"
         self.assertRaisesRegex(ValueError, raise_answer, CreditCalculator, bad_request)
 
     def test_zero_term(self):
         bad_request = "amount: 100000\ninterest: 5.5%\ndownpayment: 2000\nterm: 0\n"
         raise_answer = "Значение срока выплаты не может быть равно 0"
-        self.assertRaisesRegex(ZeroDivisionError, raise_answer, CreditCalculator, bad_request)
+        self.assertRaisesRegex(
+            ZeroDivisionError, raise_answer, CreditCalculator, bad_request
+        )
 
     def test_biggest_term(self):
         bad_request = "amount: 100000\ninterest: 5.5%\ndownpayment: 2000\nterm: 100\n"
