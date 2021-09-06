@@ -19,14 +19,17 @@ class CreditCalculator:
     Methods
     -------
     get_float_parameter(dict_param, request_parameter)
-        Сохраняет новую запись изменения расчетной величины.
+        Возвращает выделенный параметр из словаря и переводит его в число с плавающей точкой
     get_percent_payment()
         Возвращает общий объём начисленных процентов
     get_total_payment()
         Возвращает общую сумму выплаты
     get_month_payment()
         Возвращает месячную выплату по кредиту
-
+    valid_param()
+        Валидация параметров
+    get_parameters(request_str)
+        Получение параметров из строки запроса.
     """
     PARAMETERS = ['amount', 'interest', 'downpayment', 'term']
     MAX_AMOUNT = 1000000000
@@ -37,7 +40,12 @@ class CreditCalculator:
         self.valid_param()
 
     def get_parameters(self, request_str: str) -> tuple:
-        """Получение параметров"""
+        """Получение параметров
+
+        Parameters
+        ----------
+        request_str : str
+            строка запроса."""
         list_request = (param for param in map(lambda x: x.split(': '), request_str.lower().split('\n'))
                         if param[0])
         dict_param = {}
@@ -64,7 +72,7 @@ class CreditCalculator:
             raise ValueError('Значение первоначального взноса превышает сумму кредитования')
 
     def get_float_parameter(self, dict_param: dict, request_parameter: str) -> float:
-        """Возвращает выделеный параметр из словаря и переводит его в число с плавающей точкой.
+        """Возвращает выделенный параметр из словаря и переводит его в число с плавающей точкой.
         Parameters
         ----------
         dict_param : dict
